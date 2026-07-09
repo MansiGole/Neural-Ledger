@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webhook Reconciliation Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e0e0f0;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+      color: #c9d1ff;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #8888aa;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Glassmorphism card ── */
+    .glass {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      padding: 1.5rem;
+    }
+
+    /* Browsers that support backdrop-filter */
+    @supports (backdrop-filter: blur(12px)) {
+      .glass {
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    }
+
+    /* Graceful degradation for browsers without backdrop-filter */
+    @supports not (backdrop-filter: blur(12px)) {
+      .glass {
+        background: rgba(40, 38, 80, 0.85);
+      }
+    }
+
+    /* ── Stats row ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9999bb;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-total  .stat-value { color: #a0c4ff; }
+    .stat-anomaly .stat-value { color: #ff6b6b; }
+    .stat-healed  .stat-value { color: #6bffb8; }
+
+    /* ── Feed section ── */
+    .feed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .feed-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #c9d1ff;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6bffb8;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.error { background: #ff6b6b; animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .poll-label {
+      font-size: 0.75rem;
+      color: #8888aa;
+    }
+
+    /* ── Event rows ── */
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .event-row {
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.4rem 1rem;
+      align-items: center;
+      transition: opacity 0.3s;
+    }
+
+    /* Browsers that support backdrop-filter */
+    @supports (backdrop-filter: blur(8px)) {
+      .event-row {
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+    }
+
+    /* Graceful degradation */
+    @supports not (backdrop-filter: blur(8px)) {
+      .event-row {
+        background: rgba(50, 48, 90, 0.75);
+      }
+    }
+
+    .event-row.anomaly {
+      border-color: rgba(255, 107, 107, 0.4);
+      background: rgba(255, 80, 80, 0.12);
+    }
+
+    .event-row.healed {
+      border-color: rgba(107, 255, 184, 0.4);
+      background: rgba(80, 255, 160, 0.08);
+    }
+
+    .event-key {
+      font-weight: 600;
+      color: #d0d8ff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-meta {
+      color: #8888aa;
+      font-size: 0.75rem;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-anomaly { background: rgba(255, 107, 107, 0.25); color: #ff9999; border: 1px solid rgba(255,107,107,0.4); }
+    .badge-healed  { background: rgba(107, 255, 184, 0.2);  color: #80ffcc; border: 1px solid rgba(107,255,184,0.4); }
+    .badge-normal  { background: rgba(160, 196, 255, 0.15); color: #a0c4ff; border: 1px solid rgba(160,196,255,0.3); }
+
+    /* ── Empty / error states ── */
+    .empty-state {
+      text-align: center;
+      color: #666688;
+      padding: 2rem 0;
+      font-size: 0.9rem;
+    }
+
+    .error-banner {
+      background: rgba(255, 80, 80, 0.15);
+      border: 1px solid rgba(255, 80, 80, 0.35);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      color: #ffaaaa;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .error-banner.visible { display: block; }
+  </style>
+</head>
+<body>
+
+  <h1>⚡ Webhook Reconciliation</h1>
+  <p class="subtitle">Real-time transaction monitoring dashboard</p>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="glass stat-card stat-total">
+      <div class="stat-label">Total Events</div>
+      <div class="stat-value" id="total-events">—</div>
+    </div>
+    <div class="glass stat-card stat-anomaly">
+      <div class="stat-label">Anomalies</div>
+      <div class="stat-value" id="anomaly-count">—</div>
+    </div>
+    <div class="glass stat-card stat-healed">
+      <div class="stat-label">Healed</div>
+      <div class="stat-value" id="healed-count">—</div>
+    </div>
+  </div>
+
+  <!-- Error banner -->
+  <div class="error-banner" id="error-banner">
+    ⚠ Unable to reach <code>/metrics</code> — retrying every 3 seconds…
+  </div>
+
+  <!-- Live feed -->
+  <div class="glass">
+    <div class="feed-header">
+      <span class="feed-title">
+        <span class="status-dot" id="status-dot"></span>
+        Recent Events
+      </span>
+      <span class="poll-label" id="poll-label">Polling every 3s</span>
+    </div>
+    <div class="event-list" id="event-list">
+      <div class="empty-state">Waiting for data…</div>
+    </div>
+  </div>
+
+  <script>
+    const POLL_INTERVAL_MS = 3000;
+
+    const elTotal   = document.getElementById('total-events');
+    const elAnomaly = document.getElementById('anomaly-count');
+    const elHealed  = document.getElementById('healed-count');
+    const elList    = document.getElementById('event-list');
+    const elError   = document.getElementById('error-banner');
+    const elDot     = document.getElementById('status-dot');
+    const elPoll    = document.getElementById('poll-label');
+
+    function formatTimestamp(ts) {
+      if (!ts) return '—';
+      try {
+        return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      } catch {
+        return ts;
+      }
+    }
+
+    function renderEvent(ev) {
+      const isAnomaly = ev.is_anomaly === 1 || ev.is_anomaly === true;
+      const isHealed  = ev.is_healed  === 1 || ev.is_healed  === true;
+
+      let rowClass = 'event-row';
+      let badgeHtml = '';
+
+      if (isAnomaly) {
+        rowClass += ' anomaly';
+        badgeHtml = '<span class="badge badge-anomaly">Anomaly</span>';
+      } else if (isHealed) {
+        rowClass += ' healed';
+        badgeHtml = '<span class="badge badge-healed">Healed</span>';
+      } else {
+        badgeHtml = '<span class="badge badge-normal">' + escHtml(ev.status || 'normal') + '</span>';
+      }
+
+      const key  = escHtml(ev.idempotency_key || ev.transaction_id || '—');
+      const time = formatTimestamp(ev.received_at || ev.timestamp);
+      const txId = escHtml(ev.transaction_id || '');
+
+      return `
+        <div class="${rowClass}">
+          <div>
+            <div class="event-key">${key}</div>
+            <div class="event-meta">${txId} &middot; ${time}</div>
+          </div>
+          <div>${badgeHtml}</div>
+        </div>`;
+    }
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function setError(on) {
+      elError.classList.toggle('visible', on);
+      elDot.classList.toggle('error', on);
+    }
+
+    async function poll() {
+      try {
+        const res = await fetch('/metrics');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        setError(false);
+
+        elTotal.textContent   = data.total_events  ?? '0';
+        elAnomaly.textContent = data.anomaly_count ?? '0';
+        elHealed.textContent  = data.healed_count  ?? '0';
+
+        const events = Array.isArray(data.recent_events) ? data.recent_events : [];
+        if (events.length === 0) {
+          elList.innerHTML = '<div class="empty-state">No events yet</div>';
+        } else {
+          elList.innerHTML = events.map(renderEvent).join('');
+        }
+
+        elPoll.textContent = 'Updated ' + new Date().toLocaleTimeString();
+      } catch (err) {
+        setError(true);
+        elPoll.textContent = 'Error — retrying…';
+        console.error('[dashboard] poll error:', err);
+      }
+    }
+
+    // Initial fetch then start interval
+    poll();
+    setInterval(poll, POLL_INTERVAL_MS);
+  </script>
+</body>
+</html>

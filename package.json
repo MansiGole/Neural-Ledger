@@ -1,0 +1,14 @@
+{
+  "name": "webhook-reconciliation-engine",
+  "version": "1.0.0",
+  "description": "Webhook reconciliation mock backend - Person 3",
+  "main": "server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "cors": "^2.8.6",
+    "express": "^4.18.2"
+  }
+}

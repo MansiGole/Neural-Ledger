@@ -1,0 +1,27 @@
+node_modules/
+.env
+
+# Node
+node_modules/
+dist/
+build/
+
+# Environment
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.hypothesis/
+
+# IDE
+.vscode/
+.idea/
+.kiro/
+
+# Logs
+*.log
+npm-debug.log*

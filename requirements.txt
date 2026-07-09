@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+scikit-learn
+numpy
+hypothesis
+pytest
+pytest-asyncio
+httpx
+requests
+anyio
