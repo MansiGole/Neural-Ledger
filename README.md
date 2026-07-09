@@ -242,12 +242,12 @@ Interactive dashboard providing:
 # 📷 Screenshots
 
 - Dashboard
--
+
 <img width="1847" height="908" alt="image" src="https://github.com/user-attachments/assets/74823285-e9c3-48c6-9af8-2d535e91f4c2" />
 
 
 - Compliance Report
--
+
   <img width="503" height="660" alt="image" src="https://github.com/user-attachments/assets/c463e629-9852-4867-b514-dbf507e9892d" />
 
 
