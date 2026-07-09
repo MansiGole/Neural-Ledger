@@ -3,13 +3,12 @@
 
 > An intelligent middleware platform that securely processes payment webhooks, detects reconciliation anomalies using AI, autonomously repairs inconsistent transaction histories, and provides real-time operational insights.
 
-![React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react)
-![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?logo=node.js)
-![Express](https://img.shields.io/badge/Express.js-000000?logo=express)
-![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?logo=supabase)
-![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis)
-![Python](https://img.shields.io/badge/AI-Python-3776AB?logo=python)
-![License](https://img.shields.io/badge/License-MIT-blue)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node](https://img.shields.io/badge/Node.js-Express-green)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+![Redis](https://img.shields.io/badge/Redis-Queue-red)
+![Python](https://img.shields.io/badge/Python-AI-yellow)
 
 ---
 
@@ -265,7 +264,7 @@ Interactive dashboard providing:
 
 ---
 
-# 👨‍💻 Team
+# 👨‍💻
 
 This project was developed during a hackathon by:
 
